@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from 'react-router-dom'
 
 import Button from '@material-ui/core/Button';
@@ -32,19 +32,19 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function QuestionsHome({currentUser,loggedIn}){
+export default function QuestionsHome({ currentUser, loggedIn }) {
 
   const classes = useStyles();
 
-  const [questions, setQuestions] =useState()
+  const [questions, setQuestions] = useState()
   const [users, setUsers] = useState()
   const [openSnackBar, setOpenSnackBar] = useState(false);
   const [variant, setVariant] = useState('info');
   const [anchorEl, setAnchorEl] = useState(null);
   const [currentSelected, setCurrentSelected] = useState()
   const [favoriteQuestions, setFavoriteQuestions] = useState([])
-  const [openFavorite, setOpenFavorite]=useState(false)
-  
+  const [openFavorite, setOpenFavorite] = useState(false)
+
   const handleClickSnackBar = () => {
     setOpenSnackBar(true);
   };
@@ -66,22 +66,21 @@ export default function QuestionsHome({currentUser,loggedIn}){
   };
 
   const deleteItem = (e) => {
-    const index = displayedQuestions.findIndex( el => el.id === currentSelected)
-    displayedQuestions.splice(index,1)
+    const index = displayedQuestions.findIndex(el => el.id === currentSelected)
+    displayedQuestions.splice(index, 1)
     handleCloseMenu(e)
-    fetch(`${ajax.QA_URl}questions/${currentSelected}`, {method: 'delete'})
+    fetch(`${ajax.QA_URl}questions/${currentSelected}`, { method: 'delete' })
   }
 
   const addToFavorite = (e) => {
-    const index = displayedQuestions.findIndex( el => el.id === currentSelected)
-
+    const index = displayedQuestions.findIndex(el => el.id === currentSelected)
     setFavoriteQuestions([
       displayedQuestions[index].id,
       ...favoriteQuestions
     ])
     handleCloseMenu(e)
   }
-  
+
   const openFavoriteQuestions = () => {
     setOpenFavorite(!openFavorite)
   }
@@ -91,148 +90,139 @@ export default function QuestionsHome({currentUser,loggedIn}){
       .then(questions => {
 
         setQuestions(questions)
-        
+
         Promise.all(
           questions.map(
-            question => {
-             return ajax.getUsers(question.userId)
-            }
+            question => { return ajax.getUsers(question.userId) }
           )
         ).then(users => setUsers(users))
-       
       })
-      
-    }
-  , [])
+  }
+    , [])
 
-  const handleSubmit = (dataToSubmit) =>{
-    
+  const handleSubmit = (dataToSubmit) => {
+
     ajax.fetchPost(dataToSubmit, 'questions')
-      .then( r => {
-        if(r.error) {
+      .then(r => {
+        if (r.error) {
           handleClickSnackBar()
           setVariant('error')
         }
-        else{ 
+        else {
           handleClickSnackBar()
           setVariant('success')
 
           setUsers([
-           currentUser,
-           ...users,
+            currentUser,
+            ...users,
           ])
 
           setQuestions([
             dataToSubmit,
             ...questions
           ])
-          
+
           console.log([
             dataToSubmit,
             ...questions
           ])
-          
+
         }
       })
       .catch(e => {
         console.error(e);
         handleClickSnackBar()
         setVariant('error')
-        })
+      })
   }
 
-    
-
   if (users === undefined) {
-    return <div>Loading ...</div>}
-  else if(questions === undefined) return <div>Loading ...</div>
+    return <div>Loading ...</div>
+  }
+  else if (questions === undefined) return <div>Loading ...</div>
 
   let displayedQuestions = questions
 
   if (openFavorite) {
-    console.log(favoriteQuestions)
-    console.log(displayedQuestions.filter(el => favoriteQuestions.indexOf(el.id) !== -1))
     displayedQuestions = displayedQuestions.filter(el => favoriteQuestions.indexOf(el.id) !== -1)
   }
   else {
     displayedQuestions = questions
   }
 
-  let questionCard = displayedQuestions.map( (question,index) => 
-     (
-        <Card className ={classes.card} key = {question.id}>
-          <CardHeader
-            style = {{paddingLeft: 30}}
-            avatar= {
-              <MyAvatar/>
-            }
-            action={
-              <IconButton aria-label="settings" onClick={
-                  handleClickMenu(question.id)
-              }>
-                <MoreVertIcon />
-              </IconButton>
-            }
-            title= {`Posted by ${users.find(user => user.id === question.userId).name} on ${ new Date(question.createdAt).toDateString()}`}
-          />
-          <Link to={`/questions/${question.id}`} style ={ { textDecoration: 'none', color: 'rgba(0, 0, 0, 0.87)' }}> 
-           
-            <CardContent style = {{paddingTop: 0, paddingLeft: 40}}>
-              <h1 style ={{marginTop: 0}}>{question.question}</h1>
-              <p>{question.description}</p>
-            </CardContent>
-
-          </Link>
-          
-        </Card>
-    )
-  )
-  return(
-        <Container>
-        <AskQuestion userId ={currentUser.userId} handleSubmit={handleSubmit} loggedIn = {loggedIn} />
-        <List style ={{
-          width: '100%',
-          paddingTop: 0
-        }}>
-          <ListItem divider style ={{ position: 'relative', height: 55, backgroundColor: '#f9fafa'}}>
-            <Button 
-            variant = 'outlined' 
-            color = 'primary'
-            style ={{ position: 'absolute',
-                    right: 30}}
-            onClick ={openFavoriteQuestions}
-            > 
-             {openFavorite? 'All Questions' : 'My favorite questions'} 
-            </Button>
-          </ListItem>
-         {questionCard}
-        </List>
-        <Snackbar
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
+  return (
+    <Container>
+      <AskQuestion userId={currentUser.userId} handleSubmit={handleSubmit} loggedIn={loggedIn} />
+      <List style={{
+        width: '100%',
+        paddingTop: 0
+      }}>
+        <ListItem divider style={{ position: 'relative', height: 55, backgroundColor: '#f9fafa' }}>
+          <Button
+            variant='outlined'
+            color='primary'
+            style={{
+              position: 'absolute',
+              right: 30
             }}
-            open={openSnackBar}
-            autoHideDuration={6000}
-            onClose={handleCloseSnackBar}
+            onClick={openFavoriteQuestions}
           >
-            <MySnackbarContentWrapper
-              onClose={handleCloseSnackBar}
-              variant={variant}
-              message={ variant === 'success' ? "Your question have been succesful posted!" : "Sorry, error posting your question"}
-            />
-          </Snackbar>
-          <Menu
-            id="menuMoreVers"
-            anchorEl={anchorEl}
-            keepMounted
-            open={Boolean(anchorEl)}
-            onClose={handleCloseMenu}
-          >
-            <MenuItem onClick={deleteItem}>Delete</MenuItem>
-            <MenuItem onClick={addToFavorite}>Add to favorite</MenuItem>
-          </Menu>
-      </Container>
+            {openFavorite ? 'All Questions' : 'My favorite questions'}
+          </Button>
+        </ListItem>
+        {displayedQuestions.map((question, index) =>
+          (
+            <Card className={classes.card} key={question.id}>
+              <CardHeader
+                style={{ paddingLeft: 30 }}
+                avatar={
+                  <MyAvatar />
+                }
+                action={
+                  <IconButton aria-label="settings" onClick={
+                    handleClickMenu(question.id)
+                  }>
+                    <MoreVertIcon />
+                  </IconButton>
+                }
+                title={`Posted by ${users.find(user => user.id === question.userId).name} on ${new Date(question.createdAt).toDateString()}`}
+              />
+              <Link to={`/questions/${question.id}`} style={{ textDecoration: 'none', color: 'rgba(0, 0, 0, 0.87)' }}>
+                <CardContent style={{ paddingTop: 0, paddingLeft: 40 }}>
+                  <h1 style={{ marginTop: 0 }}>{question.question}</h1>
+                  <p>{question.description}</p>
+                </CardContent>
+              </Link>
+            </Card>
+          )
+        )}
+      </List>
+      <Snackbar
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left',
+        }}
+        open={openSnackBar}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackBar}
+      >
+        <MySnackbarContentWrapper
+          onClose={handleCloseSnackBar}
+          variant={variant}
+          message={variant === 'success' ? "Your question have been succesful posted!" : "Sorry, error posting your question"}
+        />
+      </Snackbar>
+      <Menu
+        id="menuMoreVers"
+        anchorEl={anchorEl}
+        keepMounted
+        open={Boolean(anchorEl)}
+        onClose={handleCloseMenu}
+      >
+        <MenuItem onClick={deleteItem}>Delete</MenuItem>
+        <MenuItem onClick={addToFavorite}>Add to favorite</MenuItem>
+      </Menu>
+    </Container>
   )
 
 }

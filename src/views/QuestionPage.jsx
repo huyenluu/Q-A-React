@@ -3,17 +3,15 @@ import { useParams } from "react-router";
 import Container from '@material-ui/core/Container';
 import List from '@material-ui/core/List';
 import Button from '@material-ui/core/Button'
-import Skeleton from '@material-ui/lab/Skeleton';
-
 import AnswerForm from './AnswerForm';
 import QuestionSection from './questionSection'
 import AnswerSection from './AnswerSection';
-
 import { Link } from "react-router-dom"
 import * as ajax from '../ajax'
 import '../App.css';
+import { useRef } from 'react';
 
-function QuestionPage({ currentUser, loggedIn }) {
+function QuestionPage(props) {
 
   const { questionId } = useParams();
 
@@ -23,8 +21,9 @@ function QuestionPage({ currentUser, loggedIn }) {
   const [usersAnswer, setUsersAnswer] = useState();
   const [postAnswer, setPostAnswer] = useState();
 
-  const QA_URl = "https://desolate-woodland-95121.herokuapp.com/"
 
+  const { currentUser, loggedIn } = props;
+  let answersAndUsers = useRef([])
 
   useEffect(
     () => {
@@ -36,8 +35,8 @@ function QuestionPage({ currentUser, loggedIn }) {
           ajax.getUsers(question.userId)
             .then(user => setUserQuestion(user))
         })
-      return 
-    } , [questionId]
+      return
+    }, [questionId]
   )
 
   useEffect(
@@ -46,7 +45,7 @@ function QuestionPage({ currentUser, loggedIn }) {
         .then(answers => {
           setAnswers(answers)
         })
-    } ,[questionId]
+    }, [questionId]
   )
   useEffect(
     () => {
@@ -59,6 +58,21 @@ function QuestionPage({ currentUser, loggedIn }) {
         ).then(users => setUsersAnswer(users))
       }
     }, [answers])
+
+  useEffect(
+    () => {
+      if (answers !== undefined && usersAnswer !== undefined) {
+        let copy = [...answers]
+        copy = copy.map(
+          answer => {
+            const matchingUser = usersAnswer.find(el => el.id === answer.userId)
+            return { ...matchingUser , ...answer}
+          })
+        answersAndUsers.current = [...copy]
+      }
+    }, [answers, usersAnswer]
+  )
+
 
   const answerData = {
     userId: currentUser.id,
@@ -76,7 +90,7 @@ function QuestionPage({ currentUser, loggedIn }) {
       body: JSON.stringify(answerData),
     };
 
-    fetch(`${QA_URl}answers`, config)
+    fetch(`${ajax.QA_URl}answers`, config)
       .then(res => res.json())
       .then(res => {
         if (res.error) {
@@ -105,49 +119,52 @@ function QuestionPage({ currentUser, loggedIn }) {
     setPostAnswer(e.target.value)
   }
 
-  let questionSection = (question && userQuestion)
-    ? <QuestionSection
-      user={userQuestion}
-      question={question}
-    />
-    : <Skeleton variant="rect" width={600} height={100} />
+  const handleEditBtn = id => {
 
-  let answersSection = (answers && usersAnswer)
-    ? (<AnswerSection answers={answers} users={usersAnswer} currentUser={currentUser} />)
-    : null
 
-  let postAnswerSection = !loggedIn
-    ? (
-      <div style={{ textAlign: 'center', paddingBottom: '40px' }}>
-        <p>Please sign in in order to post a question</p>
-        <Link to='sign-in'>
-          <Button
-            type="submit"
-            variant="contained"
-            color="secondary"
-          >
-            Sign in
-          </Button>
-        </Link>
-      </div>
-    )
-    : (<AnswerForm
-      userName={currentUser.name}
-      handleSubmit={handleSubmit}
-      handleChange={handleChange}
-      answer={postAnswer}
-    />)
+  }
+
+  const handleDeleteBtn = id => {
+    const index = answersAndUsers.current.findIndex( el => el.id === id)
+    answersAndUsers.current.splice(index,1)
+    fetch(`${ajax.QA_URl}answers/${id}`, { method: 'delete'})
+  }
+
 
   return (
 
     <Container style={{ backgroundColor: '#f9fafa', marginTop: 50, paddingTop: '32px', paddingBottom: '32px', marginBottom: 50 }} >
-      <List style={{
-        width: '100%',
-        padding: '0 30'
-      }}>
-        {questionSection}
-        {answersSection}
-        {postAnswerSection}
+      <List style={{ width: '100%', padding: '0 30' }}>
+
+        {(question && userQuestion) ? <QuestionSection user={userQuestion} question={question} /> : <div>Loading...</div>}
+
+        {(answersAndUsers) ? (
+          <AnswerSection
+            answersAndUsers={answersAndUsers.current}
+            {...props}
+            handleDeleteBtn={handleDeleteBtn}
+            handleEditBtn={handleEditBtn}
+          />
+
+        ) : null}
+
+        {!loggedIn
+          ? (
+            <div style={{ textAlign: 'center', paddingBottom: '40px' }}>
+              <p>Please sign in in order to post a answer</p>
+              <Link to='/sign-in'>
+                <Button variant="contained" color="secondary">
+                  Sign in
+                </Button>
+              </Link>
+            </div>
+          )
+          : (<AnswerForm
+            userName={currentUser.name}
+            handleSubmit={handleSubmit}
+            handleChange={handleChange}
+            answer={postAnswer}
+          />)}
       </List>
     </Container>
 
