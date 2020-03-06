@@ -2,6 +2,10 @@ body, html {
   height: 100%;
   background: rgba(243, 243, 243, 1);
 }
+a {
+  text-decoration: none;
+  color: #777;
+}
 .App {
   background: rgba(243, 243, 243, 1);
   width: 100%;

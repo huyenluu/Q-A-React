@@ -25,3 +25,28 @@ export const fetchPost = (dataToPost, param) => {
   return fetch(`${QA_URl+param}`, config)
     .then(res => res.json())
 }
+
+export const signUp = (dataToPost) => {
+  const config = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(dataToPost),
+  };
+
+  return fetch("http://localhost:8081/signup", config)
+    .then(res => res.json())
+}
+export const signIn = (dataToPost) => {
+  const config = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(dataToPost),
+  };
+
+  return fetch("http://localhost:8081/signin", config)
+    .then(res => res.json())
+}

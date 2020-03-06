@@ -32,19 +32,14 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function QuestionsHome(){
+export default function QuestionsHome({currentUser,loggedIn}){
 
   const classes = useStyles();
 
   const [questions, setQuestions] =useState()
   const [users, setUsers] = useState()
-  const currentUser = {
-    userId: 3,
-    Name: 'Huyen Luu'
-  }
   const [openSnackBar, setOpenSnackBar] = useState(false);
   const [variant, setVariant] = useState('info');
-
   const [anchorEl, setAnchorEl] = useState(null);
   const [currentSelected, setCurrentSelected] = useState()
   const [favoriteQuestions, setFavoriteQuestions] = useState([])
@@ -58,7 +53,6 @@ export default function QuestionsHome(){
     if (reason === 'clickaway') {
       return;
     }
-
     setOpenSnackBar(false);
   }
   const handleClickMenu = id => event => {
@@ -101,7 +95,6 @@ export default function QuestionsHome(){
         Promise.all(
           questions.map(
             question => {
-              console.log(question.userId)
              return ajax.getUsers(question.userId)
             }
           )
@@ -185,8 +178,8 @@ export default function QuestionsHome(){
           <Link to={`/questions/${question.id}`} style ={ { textDecoration: 'none', color: 'rgba(0, 0, 0, 0.87)' }}> 
            
             <CardContent style = {{paddingTop: 0, paddingLeft: 40}}>
-            <h1 style ={{marginTop: 0}}>{question.question}</h1>
-            <p>{question.description}</p>
+              <h1 style ={{marginTop: 0}}>{question.question}</h1>
+              <p>{question.description}</p>
             </CardContent>
 
           </Link>
@@ -196,7 +189,7 @@ export default function QuestionsHome(){
   )
   return(
         <Container>
-        <AskQuestion userId ={currentUser.userId} handleSubmit={handleSubmit}/>
+        <AskQuestion userId ={currentUser.userId} handleSubmit={handleSubmit} loggedIn = {loggedIn} />
         <List style ={{
           width: '100%',
           paddingTop: 0
