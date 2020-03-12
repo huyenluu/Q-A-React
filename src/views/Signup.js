@@ -61,7 +61,7 @@ export default function SignUp({ submitUser }) {
         passwordConfirmation: ''
       })
     } else {
-      submitUser(dataToSubmit) 
+      submitUser(dataToSubmit, 'signup')
       setInputValue({
       name:'',
       email:'',
@@ -83,7 +83,6 @@ export default function SignUp({ submitUser }) {
     if (reason === 'clickaway') {
       return;
     }
-
     setOpenAlert(false);
   };
 

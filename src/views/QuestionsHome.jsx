@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link } from 'react-router-dom'
-
 import Button from '@material-ui/core/Button';
 import Container from '@material-ui/core/Container';
 import List from '@material-ui/core/List';
@@ -10,10 +9,8 @@ import CardHeader from '@material-ui/core/CardHeader';
 import Snackbar from '@material-ui/core/Snackbar';
 import * as ajax from '../ajax';
 import AskQuestion from "./askQuestion";
-
 import { makeStyles } from '@material-ui/core/styles';
 import { CardContent, IconButton } from "@material-ui/core";
-
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import MyAvatar from "./Avatar";
 import MySnackbarContentWrapper from './MySnackbar';
@@ -32,9 +29,10 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function QuestionsHome({ currentUser, loggedIn }) {
+export default function QuestionsHome(props) {
 
   const classes = useStyles();
+  const { currentUser, loggedIn, token } = props
 
   const [questions, setQuestions] = useState()
   const [users, setUsers] = useState()
@@ -44,6 +42,7 @@ export default function QuestionsHome({ currentUser, loggedIn }) {
   const [currentSelected, setCurrentSelected] = useState()
   const [favoriteQuestions, setFavoriteQuestions] = useState([])
   const [openFavorite, setOpenFavorite] = useState(false)
+  const [snackbarMsg, setSnackbarMsg] = useState('')
 
   const handleClickSnackBar = () => {
     setOpenSnackBar(true);
@@ -69,7 +68,8 @@ export default function QuestionsHome({ currentUser, loggedIn }) {
     const index = displayedQuestions.findIndex(el => el.id === currentSelected)
     displayedQuestions.splice(index, 1)
     handleCloseMenu(e)
-    fetch(`${ajax.QA_URl}questions/${currentSelected}`, { method: 'delete' })
+    ajax.deleteQuestionById(currentSelected, token)
+
   }
 
   const addToFavorite = (e) => {
@@ -86,31 +86,32 @@ export default function QuestionsHome({ currentUser, loggedIn }) {
   }
 
   useEffect(() => {
-    ajax.getQuestion('')
+    ajax.getAllQuestions()
       .then(questions => {
 
         setQuestions(questions)
 
         Promise.all(
           questions.map(
-            question => { return ajax.getUsers(question.userId) }
+            question => { return ajax.getUserById(question.userId) }
           )
         ).then(users => setUsers(users))
       })
-  }
-    , [])
+  }, [])
 
   const handleSubmit = (dataToSubmit) => {
-
-    ajax.fetchPost(dataToSubmit, 'questions')
+    debugger
+    ajax.postAQuestion(dataToSubmit, token)
       .then(r => {
         if (r.error) {
           handleClickSnackBar()
           setVariant('error')
+          setSnackbarMsg("Sorry, error posting your question")
         }
         else {
           handleClickSnackBar()
           setVariant('success')
+          setSnackbarMsg("Your question have been succesful posted!")
 
           setUsers([
             currentUser,
@@ -121,18 +122,13 @@ export default function QuestionsHome({ currentUser, loggedIn }) {
             dataToSubmit,
             ...questions
           ])
-
-          console.log([
-            dataToSubmit,
-            ...questions
-          ])
-
         }
       })
       .catch(e => {
         console.error(e);
         handleClickSnackBar()
         setVariant('error')
+        setSnackbarMsg("Sorry, error posting your question")
       })
   }
 
@@ -152,7 +148,7 @@ export default function QuestionsHome({ currentUser, loggedIn }) {
 
   return (
     <Container>
-      <AskQuestion userId={currentUser.userId} handleSubmit={handleSubmit} loggedIn={loggedIn} />
+      <AskQuestion userId={currentUser.id} handleSubmit={handleSubmit} loggedIn={loggedIn} />
       <List style={{
         width: '100%',
         paddingTop: 0
@@ -189,7 +185,7 @@ export default function QuestionsHome({ currentUser, loggedIn }) {
               />
               <Link to={`/questions/${question.id}`} style={{ textDecoration: 'none', color: 'rgba(0, 0, 0, 0.87)' }}>
                 <CardContent style={{ paddingTop: 0, paddingLeft: 40 }}>
-                  <h1 style={{ marginTop: 0 }}>{question.question}</h1>
+                  <h1 style={{ marginTop: 0 }}>{question.title}</h1>
                   <p>{question.description}</p>
                 </CardContent>
               </Link>
@@ -209,7 +205,7 @@ export default function QuestionsHome({ currentUser, loggedIn }) {
         <MySnackbarContentWrapper
           onClose={handleCloseSnackBar}
           variant={variant}
-          message={variant === 'success' ? "Your question have been succesful posted!" : "Sorry, error posting your question"}
+          message={snackbarMsg}
         />
       </Snackbar>
       <Menu

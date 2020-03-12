@@ -3,16 +3,16 @@ import Appbar from './views/AppBar';
 import QuestionsHome from './views/QuestionsHome'
 import QuestionPage from './views/QuestionPage'
 import { Route, Switch, Redirect, } from "react-router-dom";
-import {MuiThemeProvider, createMuiTheme} from '@material-ui/core'
+import { MuiThemeProvider, createMuiTheme } from '@material-ui/core'
 import theme from './theme.json'
 import SignUp from './views/Signup';
 import Login from './views/Login'
 import * as ajax from './ajax';
 import { withRouter } from "react-router-dom";
 
-const {palette} = theme
+const { palette } = theme
 const customTheme = createMuiTheme({
-   palette
+  palette
 })
 
 class App extends React.Component {
@@ -20,70 +20,51 @@ class App extends React.Component {
   state = {
     currentUser: {},
     loggedIn: false,
+    token: null,
+    displayError: false,
   }
-  componentDidMount(){
-    // TODO - get currentUser from local storage
-    const currentUser = localStorage.getItem('user')
-    if (currentUser !== undefined && currentUser !== null ) {
+  componentDidMount() {
+
+    // get currentUser & token from local storage
+    const data = JSON.parse(localStorage.getItem('user'))
+    if (data !== undefined && data !== null) {
       this.setState({
-      currentUser:JSON.parse(currentUser),
-      loggedIn: true,
-    })
+        currentUser: data.user,
+        loggedIn: true,
+        token: data.token
+      })
     }
   }
 
-  submitUser = (dataToSubmit) =>{
-    
-    ajax.signUp(dataToSubmit)
-      .then( r => {
-        if(r.error) {
-          console.log(r.error)
+  submitUser = (dataToSubmit, authType) => {
 
-          //TODO - display error to user
+    ajax.auth(dataToSubmit, authType)
+      .then(r => {
+        if (r.error) {
+          console.log(r.error)
+          this.setState({
+            displayError: true
+          })
 
         }
-        else{ 
+        else {
           console.log('success')
           this.setState({
-            currentUser: r,
-            loggedIn: true
+            currentUser: r.user,
+            loggedIn: true,
+            token: r.token
           })
-          
-          //TODO - sync with localstorage
 
+          // sync with localstorage
           localStorage.setItem('user', JSON.stringify(r))
-
-          console.log(this.state.currentUser)
         }
       })
       .catch(e => {
         console.error(e);
+        this.setState({
+          displayError: true
         })
-  }
-
-  signInUser = (dataToSubmit) =>{
-    
-    ajax.signIn(dataToSubmit)
-      .then( r => {
-        if(r.error) {
-          console.log(r.error)
-          //TODO - display error to user
-        }
-        else{ 
-          console.log('sign in success')
-          this.setState({
-            currentUser: r,
-            loggedIn: true
-          })
-          
-          //TODO - sync with localstorage
-          localStorage.setItem('user', JSON.stringify(r))
-          console.log(this.state.currentUser)
-        }
       })
-      .catch(e => {
-        console.error(e);
-        })
   }
 
   handleSignOut = () => {
@@ -94,40 +75,39 @@ class App extends React.Component {
     localStorage.removeItem('user');
   }
 
-  render(){
-    
+  render() {
+
     return (
-    
-      <div className = "App">
-        <MuiThemeProvider theme = {customTheme}>
-          
-          <Appbar currentUser ={this.state.currentUser} handleSignOut ={this.handleSignOut} />
+
+      <div className="App">
+        <MuiThemeProvider theme={customTheme}>
+
+          <Appbar currentUser={this.state.currentUser} handleSignOut={this.handleSignOut} loggedIn ={this.state.loggedIn} />
           <Switch>
-
             <Route exact path="/questions">
-              <QuestionsHome currentUser ={this.state.currentUser} loggedIn = {this.state.loggedIn}/>
-            </Route>
-           
-            <Route path="/questions/:questionId" >
-              <QuestionPage currentUser ={this.state.currentUser} loggedIn = {this.state.loggedIn}/>
-            </Route>
-  
-            <Route path ="/sign-up">
-              {!this.state.loggedIn ? <SignUp submitUser ={this.submitUser}/> : <Redirect to ='questions'/> }            
+              <QuestionsHome {...this.state} />
             </Route>
 
-            <Route path ="/sign-in"> 
-              {!this.state.loggedIn ? <Login signInUser ={this.signInUser}/> : <Redirect to ='questions'/> }
+            <Route path="/questions/:questionId" >
+              <QuestionPage {...this.state} />
             </Route>
-  
+
+            <Route path="/sign-up">
+              {!this.state.loggedIn ? <SignUp submitUser={this.submitUser} /> : <Redirect to='questions' />}
+            </Route>
+
+            <Route path="/sign-in">
+              {!this.state.loggedIn ? <Login submitUser={this.submitUser} /> : <Redirect to='questions' />}
+            </Route>
+
             <Redirect to="/questions" />
           </Switch>
-          
+
         </MuiThemeProvider>
       </div>
     )
   }
-  
-  
+
+
 }
 export default withRouter(App);

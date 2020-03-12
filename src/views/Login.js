@@ -12,7 +12,7 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 
-  
+
   const useStyles = makeStyles(theme => ({
     paper: {
       marginTop: theme.spacing(8),
@@ -32,8 +32,8 @@ import Container from '@material-ui/core/Container';
       margin: theme.spacing(3, 0, 2),
     },
   }));
-  
-  export default function Login({signInUser}) {
+
+  export default function Login({submitUser}) {
     const classes = useStyles();
 
     const [inputValue, setInputValue] = useState({
@@ -50,8 +50,8 @@ import Container from '@material-ui/core/Container';
 
     const handleSubmit = (e) => {
       e.preventDefault()
-      
-      signInUser(dataToSubmit)
+
+      submitUser(dataToSubmit, 'signin')
 
       setInputValue({
         email: '',
@@ -59,7 +59,7 @@ import Container from '@material-ui/core/Container';
       })
 
     };
-  
+
 
     const handleChange =(e) => {
       setInputValue({
@@ -67,15 +67,15 @@ import Container from '@material-ui/core/Container';
         [e.target.name]: e.target.value
       })
     }
-  
+
     return (
-      
+
       <Container component="main" maxWidth="sm">
-        
+
         <CssBaseline />
 
         <div className={classes.paper}>
-          
+
           <Typography component="h1" variant="h5">
             Sign in
           </Typography>
@@ -135,7 +135,7 @@ import Container from '@material-ui/core/Container';
           </form>
         </div>
         <Box mt={8}>
-         
+
         </Box>
       </Container>
     );

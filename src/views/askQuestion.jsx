@@ -60,7 +60,7 @@ export default function AskQuestion({ userId, handleSubmit, loggedIn }) {
   };
 
   const dataToSubmit = {
-    question: inputValue.title,
+    title: inputValue.title,
     description: inputValue.description,
     createdAt: Date.now(),
     userId: userId
@@ -119,7 +119,7 @@ export default function AskQuestion({ userId, handleSubmit, loggedIn }) {
                   variant="outlined"
                 />
                 <br />
-    
+
                 <TextField
                   name='description'
                   placeholder='Add question details...'
@@ -130,7 +130,7 @@ export default function AskQuestion({ userId, handleSubmit, loggedIn }) {
                   variant="outlined"
                   className={classes.textField}
                 />
-              </form>) 
+              </form>)
               : (<div className = {classes.dialogContent}>
                 <h3>Please sign in in order to post a question</h3>
                 <Link to='sign-in'>

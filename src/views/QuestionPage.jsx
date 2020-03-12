@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from "react-router";
 import Container from '@material-ui/core/Container';
 import List from '@material-ui/core/List';
@@ -9,104 +9,59 @@ import AnswerSection from './AnswerSection';
 import { Link } from "react-router-dom"
 import * as ajax from '../ajax'
 import '../App.css';
-import { useRef } from 'react';
-
 function QuestionPage(props) {
 
-  const { questionId } = useParams();
-
   const [question, setQuestion] = useState();
-  const [answers, setAnswers] = useState();
+  const [answers, setAnswers] = useState([]);
   const [userQuestion, setUserQuestion] = useState();
-  const [usersAnswer, setUsersAnswer] = useState();
-  const [postAnswer, setPostAnswer] = useState();
+  const [usersAnswer, setUsersAnswer] = useState([]);
+  const { questionId } = useParams();
+  const { currentUser, loggedIn, token } = props;
 
+  const getData = useCallback(
+    () => {
 
-  const { currentUser, loggedIn } = props;
-  let answersAndUsers = useRef([])
+        ajax.getAnswersByQuestionId(questionId)
+          .then(answers => {
+            console.log(answers)
+            setAnswers(answers)
+            Promise.all(
+              answers.map(
+                answer =>
+                  ajax.getUserById(answer.userId)
+              )
+            ).then(users => {
+              console.log(users)
+              setUsersAnswer(users)
+            })
+
+          })
+    },
+    [questionId],
+  );
 
   useEffect(
     () => {
-      ajax.getQuestion(questionId)
+
+      ajax.getQuestionById(questionId)
         .then(question => {
-
           setQuestion(question)
-
-          ajax.getUsers(question.userId)
+          ajax.getUserById(question.userId)
             .then(user => setUserQuestion(user))
         })
-      return
-    }, [questionId]
-  )
-
-  useEffect(
-    () => {
-      ajax.getAnswers(questionId)
-        .then(answers => {
-          setAnswers(answers)
-        })
-    }, [questionId]
-  )
-  useEffect(
-    () => {
-      if (answers !== undefined) {
-        Promise.all(
-          answers.map(
-            answer =>
-              ajax.getUsers(answer.userId)
-          )
-        ).then(users => setUsersAnswer(users))
-      }
-    }, [answers])
-
-  useEffect(
-    () => {
-      if (answers !== undefined && usersAnswer !== undefined) {
-        let copy = [...answers]
-        copy = copy.map(
-          answer => {
-            const matchingUser = usersAnswer.find(el => el.id === answer.userId)
-            return { ...matchingUser , ...answer}
-          })
-        answersAndUsers.current = [...copy]
-      }
-    }, [answers, usersAnswer]
+      getData()
+    }, [questionId, getData]
   )
 
 
-  const answerData = {
-    userId: currentUser.id,
-    questionId: questionId,
-    text: postAnswer
-  }
+  const handleSubmit = answerData => {
 
-  function handleSubmit(e) {
-    e.preventDefault()
-    const config = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(answerData),
-    };
-
-    fetch(`${ajax.QA_URl}answers`, config)
-      .then(res => res.json())
+    ajax.postAnswer(answerData, token)
       .then(res => {
         if (res.error) {
           alert(res.error);
         } else {
-
-          setUsersAnswer([
-            ...usersAnswer,
-            currentUser])
-
-          setAnswers([
-            ...answers,
-            answerData
-          ])
-          setPostAnswer('')
-
+          getData()
         }
       })
       .catch(e => {
@@ -115,19 +70,20 @@ function QuestionPage(props) {
       })
 
   }
-  function handleChange(e) {
-    setPostAnswer(e.target.value)
-  }
 
   const handleEditBtn = id => {
 
 
   }
 
-  const handleDeleteBtn = id => {
-    const index = answersAndUsers.current.findIndex( el => el.id === id)
-    answersAndUsers.current.splice(index,1)
-    fetch(`${ajax.QA_URl}answers/${id}`, { method: 'delete'})
+  const handleDeleteBtn = (id) => {
+debugger
+console.log('cliked')
+    const index = answers.findIndex(el => el.id === id)
+    const copyArr = [...answers]
+    copyArr.splice(index, 1)
+    setAnswers(copyArr)
+    ajax.deleteAnswerById(id, token)
   }
 
 
@@ -138,9 +94,10 @@ function QuestionPage(props) {
 
         {(question && userQuestion) ? <QuestionSection user={userQuestion} question={question} /> : <div>Loading...</div>}
 
-        {(answersAndUsers) ? (
+        {(answers && usersAnswer) ? (
           <AnswerSection
-            answersAndUsers={answersAndUsers.current}
+            answers={answers}
+            users={usersAnswer}
             {...props}
             handleDeleteBtn={handleDeleteBtn}
             handleEditBtn={handleEditBtn}
@@ -160,10 +117,9 @@ function QuestionPage(props) {
             </div>
           )
           : (<AnswerForm
-            userName={currentUser.name}
+            user={currentUser}
             handleSubmit={handleSubmit}
-            handleChange={handleChange}
-            answer={postAnswer}
+            questionId={questionId}
           />)}
       </List>
     </Container>

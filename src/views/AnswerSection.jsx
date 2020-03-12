@@ -7,56 +7,86 @@ import MyAvatar from './Avatar';
 import EditIcon from '@material-ui/icons/Edit';
 import DeleteOutlineIcon from '@material-ui/icons/DeleteOutline';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
+import { makeStyles } from '@material-ui/core/styles';
+import { useState } from 'react';
 
-function AnswerSection({answersAndUsers, currentUser, loggedIn, handleEditBtn, handleDeleteBtn}) {
+const useStyles = makeStyles(theme => ({
+    input: {
+        width: '100%',
+        backgroundColor: 'transparent',
+        border: 'none',
+        fontSize: 16,
+        outline: 'none'
+    }
+}));
+
+function AnswerSection({ answers, users, loggedIn, handleEditBtn, handleDeleteBtn }) {
+    const classes = useStyles();
     const matches = useMediaQuery('(max-width:750px)')
-    return (
+    const findMatchingUser = (answer) => {
+        return users.find(el => el.id === answer.userId)
+    }
+    let matchingUser
+    const [isDisabled, setdisabled] = useState(false)
 
-        <div>
-            <h3> Answers</h3>
-            <Divider/>
-            <List>
-                {
-                answersAndUsers.length === 0
-                ?(
+    if (users.length === 0) {
+        return (
+            <div>
+                <h3> Answers</h3>
+                <Divider />
+                <List>
                     <Grid container>
-                        <Grid item xs={1} style ={ {display: 'flex', justifyContent: 'center'}} >
+                        <Grid item xs={1} style={{ display: 'flex', justifyContent: 'center' }} >
                             {loggedIn ? <MyAvatar/> : null}
                         </Grid>
-                        <Grid item xs={12} sm ={9}>
+                        <Grid item xs={12} sm={9}>
                             <p> Be first to add a comment!</p>
                         </Grid>
                     </Grid>
-
-                )
-                : answersAndUsers.map(
-                        (answer,index) => (
-
-                            <Grid container key = {answer.id}>
-                                <Grid item xs={1} style ={ {display: 'flex', justifyContent: 'center', paddingTop: 16}} >
-                                    <MyAvatar/>
+                </List>
+                <Divider />
+            </div>
+        )
+    } else {
+        return (
+            <div>
+                <h3> Answers</h3>
+                <Divider />
+                <List>
+                    {answers.map(
+                        (answer) => {
+                            matchingUser = findMatchingUser(answer)
+                            return (
+                                <Grid container key={answer.id}>
+                                    <Grid item xs={1} style={{ display: 'flex', justifyContent: 'center', paddingTop: 16 }} >
+                                        <MyAvatar/>
+                                    </Grid>
+                                    <Grid item xs={7} sm={9} style={matches ? { paddingLeft: '20px' } : null}>
+                                        <p style={{ fontWeight: 700 }}>
+                                            {matchingUser.name}
+                                        </p>
+                                        <form>
+                                            <input
+                                                type="text"
+                                                value={answer.text}
+                                                className={classes.input}
+                                                disabled={isDisabled ? "disabled" : ""}
+                                            />
+                                        </form>
+                                    </Grid>
+                                    <Button onClick={() => handleEditBtn(answer.id)}><EditIcon /></Button>
+                                    <Button onClick={() => handleDeleteBtn(answer.id)}><DeleteOutlineIcon /></Button>
+                                    <Divider />
                                 </Grid>
-                                <Grid item xs={7} sm ={9}  style ={ matches ? { paddingLeft: '20px'} : null}>
-                                    <p style ={{fontWeight: 700}}>
-                                       {answer.name}
-                                    </p>
-                                    <p> {answer.text}</p>
-                                </Grid>
-
-                                    <Button onClick ={handleEditBtn(answer.id)}><EditIcon/></Button>
-                                    <Button onClick ={handleDeleteBtn(answer.id)}><DeleteOutlineIcon/></Button>
-
-
-                                <Divider/>
-                            </Grid>
-
-                        )
+                            )
+                        }
                     )
-                }
-            </List>
-            <Divider/>
-        </div>
-    )
+                    }
+                </List>
+                <Divider />
+            </div>
+        )
+    }
 }
 
 export default AnswerSection;

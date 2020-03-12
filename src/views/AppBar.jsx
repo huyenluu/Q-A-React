@@ -22,9 +22,10 @@ const useStyles = makeStyles(theme => ({
   }
 }));
 
-export default function MyAppBar({ currentUser,handleSignOut }) {
-  const classes = useStyles();
+export default function MyAppBar(props) {
 
+  const classes = useStyles();
+  const { currentUser, handleSignOut} = props
   return (
     <div className={classes.root}>
       <AppBar position="static">
@@ -49,13 +50,10 @@ export default function MyAppBar({ currentUser,handleSignOut }) {
                 </div>
               )
               : (
-                  
-                  <p>welcome, {currentUser.name}
-                    <Button color="inherit" onClick ={handleSignOut}>
-                        Sign Out
-                    </Button>
-                  </p>
-                  
+                <>
+                  <p> Welcome, {currentUser.name} </p>
+                  <Button color="inherit" onClick={handleSignOut}> Sign Out </Button>
+                </>
                 )
           }
 

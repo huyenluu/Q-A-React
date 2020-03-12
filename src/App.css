@@ -2,6 +2,9 @@ body, html {
   height: 100%;
   background: rgba(243, 243, 243, 1);
 }
+body {
+  font-family: Roboto, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
 a {
   text-decoration: none;
   color: #777;

@@ -10,7 +10,7 @@ function QuestionSection(props) {
           </Grid>
           <Grid item xs={12} sm ={9}>
             <p> Posted by {props.user.name} at {new Date(props.question.createdAt).toLocaleDateString("en-US")}</p>
-            <h1>{props.question.question}</h1>
+            <h1>{props.question.title}</h1>
             <p>{props.question.description}</p>
           </Grid>
         </Grid>
